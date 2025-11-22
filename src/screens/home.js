@@ -18,6 +18,14 @@ const API_KEY = "3047ee27aa7995cacc24925468d18c1f";
 // URL CORRETA PARA TRENDING
 const TMDB_URL = `https://api.themoviedb.org/3/trending/movie/week?language=pt-BR&api_key=${API_KEY}`;
 
+const GENRES = {
+  Romance: 10749,
+  Ação: 28,
+  Comédia: 35,
+  Drama: 18,
+  "Ficção Científica": 878
+};
+
 export default function Home({ route }) {
   const { usuario } = route.params || { usuario: "Usuário" };
 
@@ -25,6 +33,11 @@ export default function Home({ route }) {
 
   const [filmes, setFilmes] = useState([]);
   const [busca, setBusca] = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [novidades, setNovidades] = useState([]);
+  const [filmesCategoria, setFilmesCategoria] = useState([]);
+
+
 
   useEffect(() => {
     carregarFilmesTrending();
@@ -34,15 +47,30 @@ export default function Home({ route }) {
     try {
       const res = await fetch(TMDB_URL);
       const data = await res.json();
-      setFilmes(data.results || []);
+      setNovidades(data.results || []);
     } catch (err) {
       console.error("Erro ao carregar filmes:", err);
     }
   };
 
+
+  
   const filmesFiltrados = filmes.filter(filme =>
     filme.title.toLowerCase().includes(busca.toLowerCase())
   );
+
+  // Carregar com base no gênero clicado
+  const carregarPorGenero = async (idGenero) => {
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&language=pt-BR&with_genres=${idGenero}`
+      );
+      const data = await res.json();
+      setFilmesCategoria(data.results || []);
+    } catch (err) {
+      console.error("Erro ao carregar gênero:", err);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -56,30 +84,42 @@ export default function Home({ route }) {
       </View>
 
       {/* Campo de busca */}
-      <View style={styles.searchBox}>
-        <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Procure Aqui"
-          placeholderTextColor="#999"
-          value={busca}
-          onChangeText={setBusca}
-        />
-      </View>
+    <ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  style={styles.categoryContainer}
+>
+  {Object.keys(GENRES).map((cat) => (
+    <TouchableOpacity
+      key={cat}
+      style={[
+        styles.categoryButton,
+        categoria === cat && { backgroundColor: "#ca0439" }
+      ]}
+      onPress={() => {
+        setCategoria(cat);
+        carregarPorGenero(GENRES[cat]);
+      }}
+    >
+      <Text
+        style={[
+          styles.categoryText,
+          categoria === cat && { color: "#fff" }
+        ]}
+      >
+        {cat}
+      </Text>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
 
-      {/* Categorias (decorativo por enquanto) */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categories}>
-        {["Romance", "Ação", "Comédia", "Drama", "Ficção Científica"].map((cat) => (
-          <TouchableOpacity key={cat} style={styles.categoryButton}>
-            <Text style={styles.categoryText}>{cat}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+
+
 
       {/* Lista de filmes */}
-      <Text style={styles.sectionTitle}>Novidades</Text>
-      <FlatList
-  data={filmesFiltrados}
+<Text style={styles.sectionTitle}>Novidades</Text>
+<FlatList
+  data={novidades}
   keyExtractor={(item) => item.id.toString()}
   horizontal
   showsHorizontalScrollIndicator={false}
@@ -97,6 +137,32 @@ export default function Home({ route }) {
     </TouchableOpacity>
   )}
 />
+
+{categoria !== "" && (
+  <>
+    <Text style={styles.sectionTitle}>Filmes de {categoria}</Text>
+
+    <FlatList
+      data={filmesCategoria}
+      keyExtractor={(item) => item.id.toString()}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      renderItem={({ item }) => (
+        <TouchableOpacity
+          style={styles.movieCard}
+          onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
+        >
+          <Image
+            source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+            style={styles.poster}
+          />
+          <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
+        </TouchableOpacity>
+      )}
+    />
+  </>
+)}
 
 
       {/* Rodapé */}
@@ -171,9 +237,7 @@ const styles = StyleSheet.create({
     height: 40,
     color: "#000",
   },
-  categories: {
-    marginBottom: 10,
-  },
+
   categoryButton: {
     backgroundColor: "#f3f3f3",
     borderRadius: 20,
@@ -228,4 +292,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#ca0439",
   },
+
+  categoryContainer: {
+  marginVertical: 20,
+},
+
+categoryButton: {
+  paddingVertical: 6,
+  paddingHorizontal: 14,
+  backgroundColor: "#eee",
+  borderRadius: 20,
+  marginRight: 10,
+  alignSelf: "flex-start",
+},
+
+categoryText: {
+  color: "#333",
+  fontSize: 14,
+  fontWeight: "600",
+},
+
 });
