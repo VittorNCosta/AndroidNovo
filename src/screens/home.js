@@ -33,7 +33,7 @@ export default function Home({ route }) {
 
   const [filmes, setFilmes] = useState([]);
   const [busca, setBusca] = useState("");
-  const [categoria, setCategoria] = useState("");
+  const [categoria, setCategoria] = useState("Romance");
   const [novidades, setNovidades] = useState([]);
   const [filmesCategoria, setFilmesCategoria] = useState([]);
 
@@ -41,6 +41,7 @@ export default function Home({ route }) {
 
   useEffect(() => {
     carregarFilmesTrending();
+    carregarPorGenero(GENRES["Romance"]);
   }, []);
 
   const carregarFilmesTrending = async () => {
