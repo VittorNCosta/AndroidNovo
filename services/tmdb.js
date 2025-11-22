@@ -53,5 +53,28 @@ export const tmdbService = {
       console.error('Erro ao buscar detalhes do filme:', error);
       return null;
     }
-  }
+  },
+    searchMovies: async (query) => {
+    const res = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}&language=pt-BR`);
+    const data = await res.json();
+    return data.results;
+  },
+
+  
+  getMovieCredits: async (id) => {
+    const res = await fetch(`${BASE_URL}/movie/${id}/credits?language=pt-BR&api_key=${API_KEY}`);
+    return res.json();
+  },
+getMovieVideos: async (id) => {
+    const res = await fetch(`${BASE_URL}/movie/${id}/videos?language=pt-BR&api_key=${API_KEY}`);
+    return res.json();
+  },
+
+  getMovieReviews: async (id) => {
+    const res = await fetch(`${BASE_URL}/movie/${id}/reviews?language=pt-BR&api_key=${API_KEY}`);
+    return res.json();
+  },
+
 };
+
+

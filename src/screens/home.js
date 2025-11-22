@@ -10,15 +10,18 @@ import {
   ScrollView 
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from '@react-navigation/native';
 
 // SUA CHAVE DA API DO TMDB
-const API_KEY = "SUA_API_KEY_AQUI";
+const API_KEY = "3047ee27aa7995cacc24925468d18c1f";
 
 // URL CORRETA PARA TRENDING
 const TMDB_URL = `https://api.themoviedb.org/3/trending/movie/week?language=pt-BR&api_key=${API_KEY}`;
 
 export default function Home({ route }) {
   const { usuario } = route.params || { usuario: "Usuário" };
+
+  const navigation = useNavigation();
 
   const [filmes, setFilmes] = useState([]);
   const [busca, setBusca] = useState("");
@@ -76,21 +79,25 @@ export default function Home({ route }) {
       {/* Lista de filmes */}
       <Text style={styles.sectionTitle}>Novidades</Text>
       <FlatList
-        data={filmesFiltrados}
-        keyExtractor={(item) => item.id.toString()}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={styles.movieCard}>
-            <Image
-              source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
-              style={styles.poster}
-            />
-            <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
-          </View>
-        )}
+  data={filmesFiltrados}
+  keyExtractor={(item) => item.id.toString()}
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      style={styles.movieCard}
+      onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
+    >
+      <Image
+        source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+        style={styles.poster}
       />
+      <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
+      <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
+    </TouchableOpacity>
+  )}
+/>
+
 
       {/* Rodapé */}
       <View style={styles.footer}>
@@ -99,10 +106,14 @@ export default function Home({ route }) {
           <Text style={styles.footerTextActive}>Home</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.footerItem}>
+        <TouchableOpacity
+          style={styles.footerItem}
+          onPress={() => navigation.navigate("Favoritos")}
+        >
           <Ionicons name="heart-outline" size={22} color="#777" />
           <Text style={styles.footerText}>Favoritos</Text>
         </TouchableOpacity>
+
 
         <TouchableOpacity style={styles.footerItem}>
           <Ionicons name="film-outline" size={22} color="#777" />

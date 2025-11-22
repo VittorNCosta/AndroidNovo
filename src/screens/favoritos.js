@@ -59,7 +59,7 @@ export default function Favoritos({ navigation }) {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
-              onPress={() => navigation.navigate("Detalhes", { filme: item })}
+              onPress={() => navigation.navigate("Detalhes", { movieId: item.id })}
             >
               <Image
                 source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
@@ -83,10 +83,11 @@ export default function Favoritos({ navigation }) {
           <Text style={styles.footerText}>Home</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.footerItem}>
+       <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate("Favoritos")}>
           <Ionicons name="heart" size={22} color="#ca0439" />
           <Text style={styles.footerTextActive}>Favoritos</Text>
         </TouchableOpacity>
+
 
         <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate("Cinemas")}>
           <Ionicons name="film-outline" size={22} color="#777" />

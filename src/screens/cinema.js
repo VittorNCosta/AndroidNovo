@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TextInput, Button, TouchableOpacity  } from 'react-native';
 import { tmdbService } from '../../services/tmdb';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Cinema() {
   const [movies, setMovies] = useState([]);
@@ -25,31 +26,60 @@ export default function Cinema() {
     );
   }
 
+const [query, setQuery] = useState('');
+
+const handleSearch = async () => {
+  if (!query) {
+    loadTrendingMovies(); // volta para trending
+    return;
+  }
+  setLoading(true);
+  const results = await tmdbService.searchMovies(query);
+  setMovies(results);
+  setLoading(false);
+};
+
+const navigation = useNavigation();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Filmes em Trending</Text>
+ <View style={styles.container}>
+  <Text style={styles.title}>Filmes em Trending</Text>
 
-      <FlatList
-        data={movies}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.movieCard}>
-            <Image
-              source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
-              style={styles.poster}
-            />
+  {/* Barra de pesquisa */}
+  <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+    <TextInput
+      style={{ flex: 1, backgroundColor: '#333', color: '#fff', padding: 8, borderRadius: 4 }}
+      placeholder="Pesquisar filme"
+      placeholderTextColor="#888"
+      value={query}
+      onChangeText={setQuery}
+    />
+    <Button title="Buscar" onPress={handleSearch} />
+  </View>
 
-            <View style={styles.movieInfo}>
-              <Text style={styles.movieTitle}>{item.title}</Text>
-              <Text style={styles.movieRating}>⭐ {item.vote_average}</Text>
-              <Text style={styles.movieOverview} numberOfLines={3}>
-                {item.overview}
-              </Text>
-            </View>
-          </View>
-        )}
+  <FlatList
+  data={movies}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      style={styles.movieCard}
+      onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
+    >
+      <Image
+        source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+        style={styles.poster}
       />
-    </View>
+      <View style={styles.movieInfo}>
+        <Text style={styles.movieTitle}>{item.title}</Text>
+        <Text style={styles.movieRating}>⭐ {item.vote_average}</Text>
+        <Text style={styles.movieOverview} numberOfLines={3}>
+          {item.overview}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  )}
+/>
+</View>
   );
 }
 
