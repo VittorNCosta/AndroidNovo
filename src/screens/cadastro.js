@@ -1,25 +1,62 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  Image, 
+  StyleSheet,
+  Alert 
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { registerUser } from '../../services/auth';
 
 export default function Cadastro({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
 
+  const [nome, setNome] = useState('');
+  const [usuario, setUsuario] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+
+  async function handleCadastro() {
+    if (!nome || !usuario || !email || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+
+    await registerUser(usuario, senha);
+
+    Alert.alert("Sucesso", "Conta criada com sucesso!");
+    navigation.navigate('Login');
+  }
+
   return (
     <View style={styles.container}>
+      
       {/* Logo */}
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
 
       {/* Campo: Nome */}
       <View style={styles.inputContainer}>
-        <TextInput placeholder="Carlos Manuel" placeholderTextColor="#999" style={styles.input} />
-        <Ionicons name="close-circle-outline" size={20} color="#999" />
+        <TextInput 
+          placeholder="Carlos Manuel" 
+          placeholderTextColor="#999" 
+          style={styles.input}
+          onChangeText={setNome}
+        />
+        <Ionicons name={nome ? "checkmark-circle" : "close-circle-outline"} size={20} color={nome ? "#4CAF50" : "#999"} />
       </View>
 
       {/* Campo: Usuário */}
       <View style={styles.inputContainer}>
-        <TextInput placeholder="Carlos1241" placeholderTextColor="#999" style={styles.input} />
-        <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+        <TextInput 
+          placeholder="Carlos1241" 
+          placeholderTextColor="#999" 
+          style={styles.input}
+          onChangeText={setUsuario}
+        />
+        <Ionicons name={usuario ? "checkmark-circle" : "close-circle-outline"} size={20} color={usuario ? "#4CAF50" : "#999"} />
       </View>
 
       {/* Campo: Email */}
@@ -29,8 +66,9 @@ export default function Cadastro({ navigation }) {
           placeholderTextColor="#999"
           style={styles.input}
           keyboardType="email-address"
+          onChangeText={setEmail}
         />
-        <Ionicons name="close-circle-outline" size={20} color="#999" />
+        <Ionicons name={email ? "checkmark-circle" : "close-circle-outline"} size={20} color={email ? "#4CAF50" : "#999"} />
       </View>
 
       {/* Campo: Senha */}
@@ -40,6 +78,7 @@ export default function Cadastro({ navigation }) {
           placeholderTextColor="#999"
           style={styles.input}
           secureTextEntry={!showPassword}
+          onChangeText={setSenha}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#999" />
@@ -47,11 +86,11 @@ export default function Cadastro({ navigation }) {
       </View>
 
       {/* Botão Criar Conta */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleCadastro}>
         <Text style={styles.buttonText}>Criar Conta</Text>
       </TouchableOpacity>
 
-      {/* Link para Login */}
+      {/* Link Login */}
       <Text style={styles.loginText}>
         Already have an account?{' '}
         <Text style={styles.linkText} onPress={() => navigation.navigate('Login')}>

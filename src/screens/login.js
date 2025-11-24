@@ -1,12 +1,51 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  Image, 
+  StyleSheet, 
+  Alert 
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { loginUser, isLogged } from '../../services/auth';
 
 export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [usuario, setUsuario] = useState('');
+  const [senha, setSenha] = useState('');
+
+  // Auto login
+  useEffect(() => {
+    async function checkLogin() {
+      const logged = await isLogged();
+      if (logged) {
+        navigation.replace('Home');
+      }
+    }
+    checkLogin();
+  }, []);
+
+  async function handleLogin() {
+    if (!usuario || !senha) {
+      Alert.alert("Erro", "Preencha todos os campos!");
+      return;
+    }
+
+    const ok = await loginUser(usuario, senha);
+
+    if (!ok) {
+      Alert.alert("Erro", "Usuário ou senha incorretos!");
+      return;
+    }
+
+    navigation.replace('Home');
+  }
 
   return (
     <View style={styles.container}>
+
       {/* Logo */}
       <Image source={require('../../assets/logo.png')} style={styles.logo} />
 
@@ -16,6 +55,7 @@ export default function LoginScreen({ navigation }) {
           placeholder="Usuário"
           placeholderTextColor="#999"
           style={styles.input}
+          onChangeText={setUsuario}
         />
         <Ionicons name="person-outline" size={20} color="#999" style={styles.icon} />
       </View>
@@ -27,6 +67,7 @@ export default function LoginScreen({ navigation }) {
           placeholderTextColor="#999"
           secureTextEntry={!showPassword}
           style={styles.input}
+          onChangeText={setSenha}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <Ionicons
@@ -39,7 +80,7 @@ export default function LoginScreen({ navigation }) {
       </View>
 
       {/* Botão de Login */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log in</Text>
       </TouchableOpacity>
 
@@ -48,7 +89,7 @@ export default function LoginScreen({ navigation }) {
         Ainda não tem uma conta?{' '}
         <Text
           style={styles.registerLink}
-          onPress={() => navigation.navigate('Register')}
+          onPress={() => navigation.navigate('Cadastro')}
         >
           Clique aqui!
         </Text>

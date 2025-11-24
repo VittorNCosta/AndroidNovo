@@ -7,15 +7,18 @@ import {
   Image, 
   TouchableOpacity, 
   StyleSheet,
-  ScrollView 
+  ScrollView,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from '@react-navigation/native';
 
+import { getUser, logoutUser } from "../../services/auth";
+
 // SUA CHAVE DA API DO TMDB
 const API_KEY = "3047ee27aa7995cacc24925468d18c1f";
 
-// URL CORRETA PARA TRENDING
+// URL TRENDING
 const TMDB_URL = `https://api.themoviedb.org/3/trending/movie/week?language=pt-BR&api_key=${API_KEY}`;
 
 const GENRES = {
@@ -26,18 +29,27 @@ const GENRES = {
   "Ficção Científica": 878
 };
 
-export default function Home({ route }) {
-  const { usuario } = route.params || { usuario: "Usuário" };
+export default function Home() {
 
   const navigation = useNavigation();
 
+  const [usuario, setUsuario] = useState("Usuário");
   const [filmes, setFilmes] = useState([]);
   const [busca, setBusca] = useState("");
   const [categoria, setCategoria] = useState("Romance");
   const [novidades, setNovidades] = useState([]);
   const [filmesCategoria, setFilmesCategoria] = useState([]);
 
-
+  // Carregar nome do usuário
+  useEffect(() => {
+    async function loadUser() {
+      const u = await getUser();
+      if (u?.username) {
+        setUsuario(u.username);
+      }
+    }
+    loadUser();
+  }, []);
 
   useEffect(() => {
     carregarFilmesTrending();
@@ -54,13 +66,10 @@ export default function Home({ route }) {
     }
   };
 
-
-  
   const filmesFiltrados = filmes.filter(filme =>
     filme.title.toLowerCase().includes(busca.toLowerCase())
   );
 
-  // Carregar com base no gênero clicado
   const carregarPorGenero = async (idGenero) => {
     try {
       const res = await fetch(
@@ -73,98 +82,107 @@ export default function Home({ route }) {
     }
   };
 
+  // Função de Logout
+  async function handleLogout() {
+    await logoutUser();
+    Alert.alert("Até mais!", "Logout realizado com sucesso.");
+    navigation.replace("Login");
+  }
+
   return (
     <View style={styles.container}>
+
       {/* Cabeçalho */}
       <View style={styles.header}>
         <View>
           <Text style={styles.saudacao}>Olá, <Text style={styles.nome}>{usuario}</Text> 👋🏻</Text>
           <Text style={styles.subtitulo}>Descubra os filmes que estão em alta abaixo!</Text>
         </View>
-        <Ionicons name="notifications-outline" size={24} color="black" />
+
+        {/* BOTÃO DE LOGOUT */}
+        <TouchableOpacity onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={26} color="#ca0439" />
+        </TouchableOpacity>
       </View>
 
-      {/* Campo de busca */}
-    <ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  style={styles.categoryContainer}
->
-  {Object.keys(GENRES).map((cat) => (
-    <TouchableOpacity
-      key={cat}
-      style={[
-        styles.categoryButton,
-        categoria === cat && { backgroundColor: "#ca0439" }
-      ]}
-      onPress={() => {
-        setCategoria(cat);
-        carregarPorGenero(GENRES[cat]);
-      }}
-    >
-      <Text
-        style={[
-          styles.categoryText,
-          categoria === cat && { color: "#fff" }
-        ]}
+      {/* CATEGORIAS */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryContainer}
       >
-        {cat}
-      </Text>
-    </TouchableOpacity>
-  ))}
-</ScrollView>
-
-
-
+        {Object.keys(GENRES).map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            style={[
+              styles.categoryButton,
+              categoria === cat && { backgroundColor: "#ca0439" }
+            ]}
+            onPress={() => {
+              setCategoria(cat);
+              carregarPorGenero(GENRES[cat]);
+            }}
+          >
+            <Text
+              style={[
+                styles.categoryText,
+                categoria === cat && { color: "#fff" }
+              ]}
+            >
+              {cat}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       {/* Lista de filmes */}
-<Text style={styles.sectionTitle}>Novidades</Text>
-<FlatList
-  data={novidades}
-  keyExtractor={(item) => item.id.toString()}
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  renderItem={({ item }) => (
-    <TouchableOpacity
-      style={styles.movieCard}
-      onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
-    >
-      <Image
-        source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
-        style={styles.poster}
+      <Text style={styles.sectionTitle}>Novidades</Text>
+
+      <FlatList
+        data={novidades}
+        keyExtractor={(item) => item.id.toString()}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.movieCard}
+            onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
+          >
+            <Image
+              source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+              style={styles.poster}
+            />
+            <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
+          </TouchableOpacity>
+        )}
       />
-      <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
-      <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
-    </TouchableOpacity>
-  )}
-/>
 
-{categoria !== "" && (
-  <>
-    <Text style={styles.sectionTitle}>Filmes de {categoria}</Text>
+      {categoria !== "" && (
+        <>
+          <Text style={styles.sectionTitle}>Filmes de {categoria}</Text>
 
-    <FlatList
-      data={filmesCategoria}
-      keyExtractor={(item) => item.id.toString()}
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      renderItem={({ item }) => (
-        <TouchableOpacity
-          style={styles.movieCard}
-          onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
-        >
-          <Image
-            source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
-            style={styles.poster}
+          <FlatList
+            data={filmesCategoria}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.movieCard}
+                onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
+              >
+                <Image
+                  source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+                  style={styles.poster}
+                />
+                <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
+              </TouchableOpacity>
+            )}
           />
-          <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
-        </TouchableOpacity>
+        </>
       )}
-    />
-  </>
-)}
-
 
       {/* Rodapé */}
       <View style={styles.footer}>
@@ -181,13 +199,12 @@ export default function Home({ route }) {
           <Text style={styles.footerText}>Favoritos</Text>
         </TouchableOpacity>
 
-
         <TouchableOpacity style={styles.footerItem}>
           <Ionicons name="film-outline" size={22} color="#777" />
           <Text style={styles.footerText}>Cinemas</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.footerItem}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => navigation.navigate("Perfil")}>
           <Ionicons name="person-outline" size={22} color="#777" />
           <Text style={styles.footerText}>Perfil</Text>
         </TouchableOpacity>
