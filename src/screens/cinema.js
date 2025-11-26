@@ -1,136 +1,229 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, Image, TextInput, Button, TouchableOpacity  } from 'react-native';
-import { tmdbService } from '../../services/tmdb';
-import { useNavigation } from '@react-navigation/native';
+import React from "react";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useNavigation } from "@react-navigation/native";
+import MapView, { Marker } from "react-native-maps"; // <-- IMPORTANTE
 
 export default function Cinema() {
-  const [movies, setMovies] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
-  useEffect(() => {
-    loadTrendingMovies();
-  }, []);
+  const cinemas = [
+  {
+    id: 1,
+    nome: "Shopping São José – Cinemark",
+    endereco:
+      "Rua Dona Izabel A. Redentora, 1434 - Loja 206 - Centro, São José dos Pinhais - PR, 83005-010",
+    imagem:
+      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1d/95/ae/1e/cinemark.jpg?w=1400&h=800&s=1",
+    latitude: -25.538583687718944,
+    longitude: -49.20469109130198,
+  },
+  {
+    id: 2,
+    nome: "Shopping Cidade – Cinesystem",
+    endereco:
+      "Av. Mal. Floriano Peixoto, 4984 - Hauer, Curitiba - PR, 81630-000",
+    imagem:
+      "https://mcities.com.br/curitiba/wp-content/uploads/sites/3/2018/03/cinesystem.jpg",
+    latitude: -25.472342602524538,
+    longitude: -49.252437731171156,
+  },
+  {
+    id: 3,
+    nome: "Shopping Palladium – UCI",
+    endereco:
+      "Av. Presidente Kennedy, 4121 - Portão, Curitiba - PR, 80610-905",
+    imagem:
+      "https://palladiumcuritiba.com.br/wp-content/uploads/2024/10/hl-8410823505-1.jpg",
+    latitude: -25.47747206602864,
+    longitude: -49.290902175120664,
+  },
+];
 
-  const loadTrendingMovies = async () => {
-    setLoading(true);
-    const trendingMovies = await tmdbService.getTrendingMovies();
-    setMovies(trendingMovies);
-    setLoading(false);
-  };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <Text style={{ color: '#fff' }}>Carregando filmes...</Text>
-      </View>
-    );
-  }
-
-const [query, setQuery] = useState('');
-
-const handleSearch = async () => {
-  if (!query) {
-    loadTrendingMovies(); // volta para trending
-    return;
-  }
-  setLoading(true);
-  const results = await tmdbService.searchMovies(query);
-  setMovies(results);
-  setLoading(false);
-};
-
-const navigation = useNavigation();
 
   return (
- <View style={styles.container}>
-  <Text style={styles.title}>Filmes em Trending</Text>
-
-  {/* Barra de pesquisa */}
-  <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-    <TextInput
-      style={{ flex: 1, backgroundColor: '#333', color: '#fff', padding: 8, borderRadius: 4 }}
-      placeholder="Pesquisar filme"
-      placeholderTextColor="#888"
-      value={query}
-      onChangeText={setQuery}
-    />
-    <Button title="Buscar" onPress={handleSearch} />
-  </View>
-
-  <FlatList
-  data={movies}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }) => (
-    <TouchableOpacity
-      style={styles.movieCard}
-      onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
-    >
-      <Image
-        source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
-        style={styles.poster}
-      />
-      <View style={styles.movieInfo}>
-        <Text style={styles.movieTitle}>{item.title}</Text>
-        <Text style={styles.movieRating}>⭐ {item.vote_average}</Text>
-        <Text style={styles.movieOverview} numberOfLines={3}>
-          {item.overview}
-        </Text>
+    <View style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Ionicons name="menu-outline" size={28} color="#000" />
+        <Text style={styles.headerTitle}>Cinemas Próximos</Text>
+        <View style={{ flexDirection: "row", gap: 15 }}>
+          <Ionicons name="notifications-outline" size={26} color="#000" />
+          <Image
+            source={{
+              uri: "https://i.imgur.com/1XKzE7D.png",
+            }}
+            style={styles.profileImage}
+          />
+        </View>
       </View>
-    </TouchableOpacity>
-  )}
-/>
-</View>
+
+      {/* LISTA + MAPA */}
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+        {cinemas.map((item) => (
+          <View key={item.id} style={styles.card}>
+            <Image source={{ uri: item.imagem }} style={styles.cinemaImage} />
+
+            <Text style={styles.cinemaName}>{item.nome}</Text>
+            <Text style={styles.cinemaEndereco}>{item.endereco}</Text>
+          </View>
+        ))}
+
+        {/* MAPA AQUI */}
+        <Text style={styles.mapTitle}>Localização dos Cinemas</Text>
+
+        <MapView
+          style={styles.map}
+          initialRegion={{
+            latitude: -25.45,
+            longitude: -49.25,
+            latitudeDelta: 0.2,
+            longitudeDelta: 0.2,
+          }}
+          showsUserLocation={true}
+        >
+          {cinemas.map((cinema) => (
+            <Marker
+              key={cinema.id}
+              coordinate={{
+                latitude: cinema.latitude,
+                longitude: cinema.longitude,
+              }}
+              title={cinema.nome}
+              description={cinema.endereco}
+            />
+          ))}
+        </MapView>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* FOOTER */}
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.footerItem}
+          onPress={() => navigation.navigate("Home")}
+        >
+          <Ionicons name="home-outline" size={22} color="#777" />
+          <Text style={styles.footerText}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.footerItem}
+          onPress={() => navigation.navigate("Favoritos")}
+        >
+          <Ionicons name="heart-outline" size={22} color="#777" />
+          <Text style={styles.footerText}>Favoritos</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.footerItem}>
+          <Ionicons name="film" size={22} color="red" />
+          <Text style={[styles.footerText, { color: "red" }]}>Cinemas</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.footerItem}
+          onPress={() => navigation.navigate("Perfil")}
+        >
+          <Ionicons name="person-outline" size={22} color="#777" />
+          <Text style={styles.footerText}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000'
-  },
   container: {
     flex: 1,
-    backgroundColor: '#111',
+    backgroundColor: "#fff",
+  },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: 50,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
   },
-  title: {
+
+  headerTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#fff',
-    textAlign: 'center',
+    fontWeight: "700",
+    color: "red",
   },
-  movieCard: {
-    flexDirection: 'row',
-    backgroundColor: '#222',
+
+  profileImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+
+  card: {
+    marginHorizontal: 20,
+    marginBottom: 25,
+  },
+
+  cinemaImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 12,
     marginBottom: 10,
-    borderRadius: 8,
-    padding: 10,
   },
-  poster: {
-    width: 80,
-    height: 120,
-    borderRadius: 4,
-  },
-  movieInfo: {
-    flex: 1,
-    marginLeft: 10,
-  },
-  movieTitle: {
+
+  cinemaName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "600",
+    marginBottom: 4,
   },
-  movieRating: {
-    fontSize: 14,
-    color: '#ccc',
-    marginBottom: 5,
+
+  cinemaEndereco: {
+    color: "#444",
+    fontSize: 13,
   },
-  movieOverview: {
+
+  mapTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  map: {
+    width: "100%",
+    height: 300,
+  },
+
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+  },
+
+  footerItem: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  footerText: {
     fontSize: 12,
-    color: '#aaa',
+    color: "#777",
+    marginTop: 3,
   },
 });
