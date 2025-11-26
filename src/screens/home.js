@@ -199,7 +199,10 @@ export default function Home() {
           <Text style={styles.footerText}>Favoritos</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.footerItem}>
+        <TouchableOpacity
+          style={styles.footerItem}
+          onPress={() => navigation.navigate("Cinema")}
+        >
           <Ionicons name="film-outline" size={22} color="#777" />
           <Text style={styles.footerText}>Cinemas</Text>
         </TouchableOpacity>
@@ -208,6 +211,8 @@ export default function Home() {
           <Ionicons name="person-outline" size={22} color="#777" />
           <Text style={styles.footerText}>Perfil</Text>
         </TouchableOpacity>
+
+        
       </View>
     </View>
   );
