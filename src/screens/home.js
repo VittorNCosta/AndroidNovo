@@ -66,9 +66,10 @@ export default function Home() {
     }
   };
 
-  const filmesFiltrados = filmes.filter(filme =>
-    filme.title.toLowerCase().includes(busca.toLowerCase())
-  );
+const filmesFiltrados = filmesCategoria.filter(filme =>
+  filme.title.toLowerCase().includes(busca.toLowerCase())
+);
+
 
   const carregarPorGenero = async (idGenero) => {
     try {
@@ -135,35 +136,23 @@ export default function Home() {
         ))}
       </ScrollView>
 
-      {/* Lista de filmes */}
-      <Text style={styles.sectionTitle}>Novidades</Text>
-
-      <FlatList
-        data={novidades}
-        keyExtractor={(item) => item.id.toString()}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.movieCard}
-            onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
-          >
-            <Image
-              source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
-              style={styles.poster}
-            />
-            <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
-          </TouchableOpacity>
-        )}
-      />
-
+{/* BARRA DE PESQUISA */}
+<View style={styles.searchBox}>
+  <Ionicons name="search" size={20} color="#777" style={styles.searchIcon} />
+  <TextInput
+    style={styles.input}
+    placeholder="Buscar filmes..."
+    placeholderTextColor="#777"
+    value={busca}
+    onChangeText={setBusca}
+  />
+</View>
       {categoria !== "" && (
         <>
           <Text style={styles.sectionTitle}>Filmes de {categoria}</Text>
 
           <FlatList
-            data={filmesCategoria}
+            data={filmesFiltrados}
             keyExtractor={(item) => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -183,6 +172,28 @@ export default function Home() {
           />
         </>
       )}
+
+              {/* Lista de filmes */}
+                <Text style={styles.sectionTitle}>Novidades</Text>
+                <FlatList
+                  data={novidades}
+                  keyExtractor={(item) => item.id.toString()}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={styles.movieCard}
+                      onPress={() => navigation.navigate('Detalhes', { movieId: item.id })}
+                    >
+                      <Image
+                        source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }}
+                        style={styles.poster}
+                      />
+                      <Text style={styles.movieTitle} numberOfLines={1}>{item.title}</Text>
+                      <Text style={styles.movieSubtitle}>{item.release_date?.split("-")[0]}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
 
       {/* Rodapé */}
       <View style={styles.footer}>
@@ -245,7 +256,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3f3f3",
     borderRadius: 10,
     paddingHorizontal: 10,
-    marginBottom: 15,
+    marginBottom: 5,
+    marginTop:-40
   },
   searchIcon: {
     marginRight: 5,
@@ -254,18 +266,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     color: "#000",
-  },
-
-  categoryButton: {
-    backgroundColor: "#f3f3f3",
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginRight: 10,
-  },
-  categoryText: {
-    color: "#000",
-    fontSize: 13,
   },
   sectionTitle: {
     fontWeight: "bold",
@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 190,
     borderRadius: 10,
+    marginTop: 5,
   },
   movieTitle: {
     fontSize: 14,
@@ -290,6 +291,7 @@ const styles = StyleSheet.create({
   movieSubtitle: {
     fontSize: 12,
     color: "#777",
+    marginTop:10
   },
   footer: {
     flexDirection: "row",
